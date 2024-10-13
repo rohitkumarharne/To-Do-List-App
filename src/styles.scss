@@ -1,4 +1,18 @@
-/* You can add global styles to this file, and also import other style files */
-
+body {
+    background-color: #f8f9fa; // Light background
+  }
+  
+  h1 {
+    color: #343a40; // Dark text for headings
+  }
+  
+  .table {
+    font-size: 1rem; // Adjust table font size
+  }
+  
+  .btn {
+    margin-right: 10px; // Add spacing between buttons
+  }
+  
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

@@ -1,0 +1,84 @@
+.task-container {
+  max-width: 600px;
+  margin: 0 auto;
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.text-center {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.form-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.form-group {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.custom-input,
+.custom-textarea {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.custom-input:focus,
+.custom-textarea:focus {
+  border-color: #007bff;
+}
+
+.custom-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.button-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-cancel,
+.btn-save {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.btn-cancel {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.btn-save {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.btn-cancel:hover {
+  background-color: #c82333;
+}
+
+.btn-save:hover {
+  background-color: #218838;
+}

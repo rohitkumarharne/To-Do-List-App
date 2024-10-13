@@ -1,146 +1,102 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Sort } from '@angular/material/sort';
-import { product } from '../../models/product-interface';
+import { TaskService } from '../../services/task.service'; // Adjust the path as necessary
+import { Task } from '../../models/product-interface'; // Ensure this points to your task model
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-product-list',
   templateUrl: './product-list.component.html',
-  styleUrls: ['./product-list.component.scss'],
+  styleUrls: ['./product-list.component.scss']
 })
 export class ProductListComponent implements OnInit {
-  productForm!: FormGroup;
-  id: number = 0;
-  productListData: product[] = [];
-  imageUrl: string = '';
-  storedImgUrl: string = '';
-  sortedData: product[] = [];
+  tasks: Task[] = []; // This array will hold the list of tasks
+  filteredTasks: Task[] = []; // This array will hold the filtered tasks
+  paginatedTasks: Task[] = []; // This array will hold the tasks for the current page
+  searchTerm: string = ''; // This will hold the search term
+  currentPage: number = 1; // Current page number
+  pageSize: number = 5; // Number of tasks to display per page
+  totalPages: number = 0; // Total number of pages
 
-  constructor(private formBuilder: FormBuilder) {
-    this.sortedData = this.productListData.slice();
-  }
+  constructor(private taskService: TaskService, private router: Router) {}
 
   ngOnInit(): void {
-    this.setProductLstForm();
-    this.getListDataFormLocal();
+    this.loadTasks(); // Load tasks when the component initializes
   }
 
-  setProductLstForm() {
-    this.productForm = this.formBuilder.group({
-      productImg: ['', [Validators.required]],
-      productName: ['', [Validators.required]],
-      details: ['', [Validators.required]],
-      price: ['', [Validators.required]],
-      quantity: ['', [Validators.required]],
-      totalPrice: ['', [Validators.required]],
-      createdDate: ['', [Validators.required]],
+  loadTasks(): void {
+    this.taskService.getTasks().subscribe(data => {
+      this.tasks = data; // Assign the fetched tasks to the local array
+      this.filteredTasks = data; // Initialize filtered tasks
+      this.calculateTotalPages(); // Calculate total pages
+      this.updatePaginatedTasks(); // Update tasks for the current page
+    }, error => {
+      console.error('Error loading tasks:', error);
+      alert('An error occurred while loading tasks. Please try again.');
     });
   }
 
-  onSubmitProductListForm() {
-    if (this.productForm.valid) {
-      let listData: product = {
-        id: ++this.id,
-        productImg: this.imageUrl,
-        productName: this.productForm.value.productName,
-        details: this.productForm.value.details,
-        price: this.productForm.value.price,
-        quantity: this.productForm.value.quantity,
-        totalPrice: this.productForm.value.totalPrice,
-        createdDate: this.productForm.value.createdDate,
-      };
-      this.actionsAfterSubmit(listData);
+  filterTasks(): void {
+    // Filter tasks based on the search term
+    this.filteredTasks = this.tasks.filter(task => 
+      task.assignedTo.toLowerCase().includes(this.searchTerm.toLowerCase()) || 
+      task.status.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+      task.priority.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+      task.comments.toLowerCase().includes(this.searchTerm.toLowerCase())
+    );
+    this.calculateTotalPages(); // Recalculate total pages based on filtered results
+    this.updatePaginatedTasks(); // Update paginated tasks
+  }
+
+  calculateTotalPages(): void {
+    this.totalPages = Math.ceil(this.filteredTasks.length / this.pageSize);
+  }
+
+  updatePaginatedTasks(): void {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    this.paginatedTasks = this.filteredTasks.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.updatePaginatedTasks(); // Update tasks for the new page
     }
   }
 
-  actionsAfterSubmit(listData: product) {
-    this.productForm.reset();
-    this.setListDataInLocal(listData);
-    this.getListDataFormLocal();
-  }
-
-  setListDataInLocal(Data: any): void {
-    this.setDataInLocalStorage(Data.id.toString(), JSON.stringify(Data));
-  }
-
-  setDataInLocalStorage(key: string, data: string): void {
-    localStorage.setItem(key, data);
-  }
-
-  getListDataFormLocal(): void {
-    let keys = Object.keys(localStorage);
-    let listArray: any = [];
-    for (let i = 0; i < keys.length; i++) {
-      let value = localStorage.getItem(keys[i]);
-      listArray.push(value);
-      this.productListData = listArray.map(JSON.parse);
-    }
-    this.sortedData = this.productListData.slice();
-  }
-
-  RemoveProduct(userId: number = 0) {
-    this.deleteUserDataFromLocal(userId);
-    this.removeObjectWithId(this.productListData, userId);
-    this.getListDataFormLocal();
-  }
-
-  removeObjectWithId(data: product[], id: number) {
-    const objWithIdIndex = data.findIndex((obj: any) => obj.id === id);
-
-    if (objWithIdIndex > -1) {
-      this.productListData.splice(objWithIdIndex, 1);
+  previousPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.updatePaginatedTasks(); // Update tasks for the new page
     }
   }
 
-  deleteUserDataFromLocal(userId: number) {
-    this.removeDataFromLocalStorage(userId.toString());
-  }
-  private removeDataFromLocalStorage(key: string) {
-    localStorage.removeItem(key);
+  refreshTasks(): void {
+    this.loadTasks(); // Call loadTasks to refresh the task list
   }
 
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-
-    reader.onload = (e: any) => {
-      this.imageUrl = e.target.result;
-    };
-
-    reader.readAsDataURL(file);
+  editTask(id: number): void 
+  {
+    // Navigate to the edit page with the selected task's ID
+    this.router.navigate(['/edit', id]);
   }
 
-  sortData(sort: Sort) {
-    const data = this.productListData.slice();
-    if (!sort.active || sort.direction === '') {
-      this.sortedData = data;
-      return;
+  deleteTask(id: number): void {
+    // Confirm before deletion
+    if (confirm("Are you sure you want to delete this task?")) 
+      {
+      this.taskService.deleteTask(id).subscribe(
+        () => {
+          // Remove the deleted task from the local tasks array
+          this.tasks = this.tasks.filter(task => task.id !== id);
+          this.filterTasks(); // Reapply the filter after deletion
+        },
+        error => {
+          // Handle any errors that occur during deletion
+          console.error('Error deleting task:', error);
+          alert('An error occurred while deleting the task. Please try again.');
+        }
+      );
     }
-
-    this.sortedData = data.sort((a: any, b: any) => {
-      const isAsc = sort.direction === 'asc';
-      switch (sort.active) {
-        case 'productImg':
-          return this.compare(a.productImg, b.productImg, isAsc);
-        case 'productName':
-          return this.compare(a.productName, b.productName, isAsc);
-        case 'details':
-          return this.compare(a.details, b.details, isAsc);
-        case 'price':
-          return this.compare(a.price, b.price, isAsc);
-        case 'quantity':
-          return this.compare(a.quantity, b.quantity, isAsc);
-        case 'totalPrice':
-          return this.compare(a.totalPrice, b.totalPrice, isAsc);
-        case 'createdDate':
-          return this.compare(a.createdDate, b.createdDate, isAsc);
-        default:
-          return 0;
-      }
-    });
   }
-
-  compare(a: number | string, b: number | string, isAsc: boolean) {
-    return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
-  }
+  
 }

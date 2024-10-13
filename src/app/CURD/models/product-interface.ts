@@ -1,14 +1,9 @@
-export interface productList {
-  product: product[];
-}
-
-export interface product {
-  id?: number;
-  productImg: string;
-  productName: string;
-  details: string;
-  price: number;
-  quantity: number;
-  totalPrice: number;
-  createdDate: Date;
+export interface Task 
+{
+  id: number;
+  assignedTo: string; 
+  status: string; 
+  dueDate: Date; 
+  priority: string; 
+  comments: string; 
 }
